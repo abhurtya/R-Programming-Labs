@@ -1,0 +1,169 @@
+---
+title: "Homework 4"
+author: "Anish  Bhurtyal"
+date: "2022-11-21"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r packages, message=FALSE, warning=FALSE}
+library(dplyr)
+library(scatterplot3d)
+library(magrittr)
+library(ggplot2)
+```
+
+
+
+###   Problem 1
+
+The Data. The ‘maps‘ package contains a database of world cities i.e. ‘world.cities‘ of
+population greater than about 40,000. Also included are capital cities of any population
+size, and many smaller towns.
+
+
+The database constitutes a list with 6 components, namely "name", "country.etc",
+"pop", "lat", "long", and "capital", containing the city name, the country name, approx-
+imate population (as at January 2006), latitude, longitude and capital status indication
+(0 for non-capital, 1 for capital, 2 for China Municipalities, and 3 for China Provincial
+capitals).
+
+
+Consider the 4,000 biggest cities in the world and their longitudes and latitudes:
+
+```{r}
+library(maps)
+big_cities <- world.cities %>%
+  arrange(desc(pop)) %>%
+  head(4000) %>%
+  select(long, lat)
+
+glimpse(big_cities)
+```
+
+#  Exploration Data Analysis (EDA)
+
+### Are there any missing data?
+
+
+```{r}
+colSums(is.na(big_cities))
+```
+
+*We dont have any missing values in the dataframe*
+
+```{r}
+str(big_cities)
+```
+
+```{r}
+cl = kmeans(big_cities,8)
+ #cl$cluster
+ plot(big_cities$long, big_cities$lat,col=cl$cluster)
+ points(cl$centers, pch=8)
+```
+```{r}
+cl = kmeans(big_cities,20)
+ #cl$cluster
+ plot(big_cities$long, big_cities$lat,col=cl$cluster)
+ points(cl$centers, pch=8)
+```
+-*Here taking a different value of k in k-means clustering chaanges how clusters are formed around the centroids. As the value of K increases, there will be fewer elements in the cluster and cover smaller groups. *
+
+-*Here when we first took k=8, we got bigger cluster size almost resembling those of continents, which are large in area*
+
+-*When we then took k=20, we got smaller cluster size almost resembling those of sub-continents or geographical regions, which are smaller in area as compared to continents*
+
+
+```{r}
+#find optimal no of clusters
+# library(cluster)
+# gap.stat <- clusGap(big_cities, FUNcluster = kmeans, K.max = 25)
+# #gap.stat
+# library(factoextra)
+# fviz_gap_stat(gap.stat)
+```
+
+
+
+###   Problem 2
+
+Baseball players are voted into the Hall of Fame by the members of the Baseball Writers
+of America Association. Quantitative criteria are used by the voters, but they are also
+allowed wide discretion.The following code identifies the position players who have
+been elected to the Hall of Fame and tabulates a few basic statistics,including their
+number of career hits(H), home runs(HR), and stolen bases(SB).
+
+Use the k-means algorithm to perform a cluster analysis on these players.Describe
+the properties that seem common to each cluster.
+
+```{r}
+library(Lahman)
+hof <- Batting %>%
+  group_by(playerID) %>%
+  inner_join(HallOfFame, by = c("playerID" = "playerID")) %>%
+  filter(inducted == "Y" & votedBy == "BBWAA") %>%
+  summarize(tH = sum(H), tHR = sum(HR), tRBI = sum(RBI), tSB = sum(SB)) %>%
+  filter(tH > 1000)
+```
+
+```{r}
+head(hof)
+```
+```{r}
+clust <- hof %>% 
+  select(2:5)%>%
+  kmeans(7)
+clust$cluster
+```
+
+```{r}
+corrr::correlate(hof, method = "pearson", quiet=T)
+```
+-*As we see we have 4 numerical variables, a 2D scatterplot could be used where we use 2 variables as axes and a third variable as bubble chart. We could use the fourth variable as color but it would be harder to visualize the cluster if we do so*
+
+-*3D-scatter plot would be one suitable alternative for easy visualization of clusters*
+
+```{r warning=FALSE}
+
+#normalizing the tSB to rescale to fit in graph
+#hof$tSB <- (hof$tSB-min(hof$tSB))/(max(hof$tSB)-min(hof$tSB))
+hof$tSB <- scale(hof$tSB)+1
+
+hof  %>%
+  select(2:4) %>%
+  scatterplot3d(  color=clust$cluster,
+                  cex.symbols = hof$tSB,
+              main="3D Scatter Plot",
+              sub = "bubble size corresponds to Total stolen bases(SB)",
+              xlab = "Total career hits(H)",
+              ylab = "Total home runs(HR)",
+              zlab = "Total runs battedin (RBI)")
+```
+
+
+
+*Looking at the clusters we see some good similarities between observations in the dataset. It gives us idea about which baseball players are similar in performance in terms of their attributes. Players within the same cluster with similar bubble size mean that the observation are identical to each others.*
+
+*This can be helpful for team managers to replace players due to injury or for any other tactical and strategical reasons using the cluster analysis in their team*
+
+-*Another possible way, we could use PCA*
+
+```{r}
+
+hoff <- hof  %>% select(2:4)
+require(graphics)
+pca = princomp(hoff, cor=T) # principal components analysis using correlation matrix
+pc.comp = pca$scores
+pc.comp1 = -1*pc.comp[,1] # principal component 1 scores (negated for convenience)
+pc.comp2 = -1*pc.comp[,2] # principal component 2 scores (negated for convenience)
+```
+
+```{r}
+X = cbind(pc.comp1, pc.comp2)
+cl = kmeans(X,7)
+cl$cluster
+plot(pc.comp1, pc.comp2,col=cl$cluster)
+points(cl$centers, pch=16)
+```
