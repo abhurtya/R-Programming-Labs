@@ -1,0 +1,145 @@
+---
+title: "Homework 3"
+author: "Anish  Bhurtyal"
+date: "2022-11-04"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r packages, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+```
+
+
+
+###   Data Overview
+
+Sports Analytics Project
+
+In this project, we consider the 1992 baseball salary data set, which is available from
+http://jse.amstat.org/datasets/baseball.dat.txt
+This data set (of dimension 337 18 ) contains salary information (and performance mea-
+sures) of 337 Major League Baseball players in 1992. Detailed information about this
+data set can be found at
+http://jse.amstat.org/datasets/baseball.txt
+
+```{r}
+co <- c("salary" ,"batting.avg", "OBP", "runs", "hits", "doubles", 
+        "triples" ,"homeruns" ,"RBI", "walks" ,"strike.outs",
+        "stolen.bases", "errors", "free.agency.elig", "free.agent.91", 
+        "arb.elig", "arb.91", "name")
+baseball <- read.table(file= "http://jse.amstat.org/datasets/baseball.dat.txt",
+                       header = F, col.names=co) 
+names(baseball)
+
+```
+
+#  1: Exploration Data Analysis (EDA)
+
+### (a) (i) Are there any missing data?
+
+```{r}
+sum(is.na(baseball) )
+```
+
+*We dont have any missing values in the dataframe*
+
+### (a) (ii) Among all the predictors, how many of them are continuous, integer counts,and categorical, respectively?
+
+```{r}
+glimpse(baseball)
+```
+
+- Continuous: salary, batting.avg, OBP
+- integer counts: runs, hits,doubles, triples, homeruns, RBI, walks, strike.outs,stolen.bases, error
+- categorical: name, arb.91, arb.elig, free.agent.91, free.agency.elig
+
+
+### (b) Obtain the histograms of salary and the logarithm (natural base) of salary and comment on the two visualizations.Proceed with the log-transformed salary from this step on.
+
+
+```{r}
+  hist(baseball$salary, xlab="salary", main="Histogram of Salary")
+```
+
+```{r}
+
+baseball$salary = log(baseball$salary)
+hist(baseball$salary, xlab="salary", main="Histogram of Salary-Natural Log")
+
+```
+
+*The majority of players' salaries are below $1,000, as indicated by the right-skewed histogram for player salaries. In contrast, the second histogram for the logarithmic salary has a more uniform distribution.*
+
+
+# 2. Multiple Linear Regression:
+### (a) Partition the data randomly into two sets: the training data D0 and the test data D1 with a ratio of about 2:1.
+
+```{r}
+set.seed(123)
+# Sample Indexes
+Index = sample(1:nrow(baseball), size = 0.7*nrow(baseball))
+# Splitting Data
+TrainData = baseball[Index,]
+dim(TrainData)
+TestData = baseball[-Index,]
+dim(TestData)
+```
+
+
+
+###  (b) Using the training data D0, fit a multiple linear regression model called "fit.train".
+
+```{r}
+fit.train <- lm(salary ~ batting.avg + OBP + runs + hits +
+                  doubles + triples + homeruns + RBI + walks +
+                  strike.outs + stolen.bases + errors + free.agency.elig +
+                  free.agent.91 + arb.elig + arb.91, data=TrainData)
+```
+
+### (c) Output the necessary fitting results, e.g., selected variables and their corre-sponding slope parameter estimates.
+
+```{r}
+ summary(fit.train)# Get the table of parameter estimates
+```
+- *We can see the parameter estimates in the summary table above.*
+
+### (d) Is there a relationship between the response and predictors?
+
+- *The quality of a linear regression fit is typically assessed using the R squared statistic (R^2). The above R2 value of 0.8068  obtained using the training dataset explains a good proportion of the variability in the response*
+
+- *The p-value is less than 0.05, so the result is significant to say we have some relationship and F-statistic value is also high*
+
+- *To Reject the NULL hypothesis, we would need the p-value < 0.05. The p-values of variables RBI, strike.outs, free.agent.91, free.agency.elig, and arb.elig are <0.05 but others donot which is why we can't reject the Null Hypothesis*
+
+### (e) Using the model (i.e., "fit. train") you developed above, predict using the test data D1. Output the mean squared error (MSE).
+
+```{r}
+data <- data.frame(actual= TestData$salary, predicted=predict(fit.train, TestData))
+head(data)
+```
+
+```{r}
+#calculate MSE
+
+#library("Metrics")
+#mse(data$actual, predict(fit.train , TestData))
+
+mean((data$actual - data$predicted)^2)
+
+```
+
+*The mean squared error (MSE) is 0.3205818. The lower the value of MSE the better and 0 means the model is perfect. *
+
+```{r  out.width = "70%"}
+ggplot(data, aes(x=predicted, y= actual)) +
+  geom_point() +
+  geom_abline(intercept=0, slope=1) +
+  labs(x='Predicted Values', y='Actual Values', title='Predicted vs. Actual Values')
+
+```
+
+
+*The predicted values from the model on TestData are displayed on the x-axis, while the actual values from the TestData dataset are displayed on the y-axis.*
