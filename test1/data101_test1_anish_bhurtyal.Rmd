@@ -1,0 +1,349 @@
+---
+title: "Test 1"
+author: "Anish Bhurtyal"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+#| label: setup
+#| include: false
+# set the echo option to FALSE to see how the document looks with the code suppressed
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Academic Honesty Statement
+
+I, Anish Bhurtyal, hereby state that I have not communicated with or gained information in any way from my classmates or anyone other than the Professor during this exam, and that all work is my own.
+
+## Load packages
+
+```{r}
+#| label: load-packages
+#| message: false
+# load required packages here
+
+library(dplyr)
+library(tidyr)
+library(nycflights13)
+library(readxl)
+library(ggplot2)
+```
+
+
+## Logistics
+
+Add your code and/or narrative in the spaces below each question. Add code chunks as needed. Use as many lines as you need, but keep your narrative concise.
+
+## Packages
+
+In addition to `tidyverse`, you will need the `nycflights13` package for the data. You will first need to install these packages and then load them. Feel free to use any other library.
+
+
+## The Data
+
+1. The `nycflights13` package contains information about all flights that departed from NYC (e.g. EWR, JFK and LGA) in 2013. The main data is in the `flights` data frame, but there are additional data sets which may help understand what causes delays, specifically:
+
+- weather: hourly meteorological data for each airport
+- planes: construction information about each plane
+- airports: airport names and locations
+- airlines: translation between two letter carrier codes and names
+
+2. The dataset `oslo-biomarkers.xlsx` contains data from a medical study about patients with disc herniations, performed at the Oslo University Hospital, Ullevål. Blood samples were collected from a number of patients with disc herniations at three time points: 0 weeks (first visit at the hospital), 6 weeks and 12 months. The levels of some biomarkers related to inflammation
+were measured in each blood sample.
+
+
+3. The dataset `oslo-covariates.xlsx` contains information about the patients, such as age, gender
+and smoking habits.
+
+## Questions
+
+### Question 1
+
+a.What does it mean for data analysis to be "reproducible"? 
+
+*Data analysis is meant to be reproducible if it has the capacity to produce consistent computational outputs by adopting the same input data, computational steps, techniques, code, and analysis conditions. Reproducible refers to the practice of making available all the data, software sources, and tools needed to reproduce the findings reported in a research paper.*
+
+*The main objective of reproducible data analysis is to guarantee computational reproducibility, i.e., the capability for another researcher to utilize one's code and data to independently produce identical results. Reproducible analysis ensures accuracy or consistency of the outcomes. proper documentation of the process gathering, preprocessing, and analyzing the data makes the data analysis reproducible*
+
+b. Discuss the toolkit for reproducibility.
+
+
+*Automation --- Scripts can be used to automate these activities.R enables you to document your actions so that you can repeat your analysis and share it to others.*
+
+*Literate programming (code, narrative, output in one place)---like using rmarkdown files and writing narration, comments*
+
+*Using version control----- Keeping track of code changes and using some sort of git repository like Github. allows us to track code changes and history*
+
+### Question 2
+
+
+a. What is Exploratory data analysis (EDA)?
+
+*Data analysis via visual methods is called exploratory data analysis (EDA). With the use of statistical summaries and graphical representations, it is used to identify trends, patterns, or to verify assumptions.*
+
+*We employ visual methods like graphs, charts, and other types of visualization. This is due to the fact that when trends and anomalies are depicted graphically, our natural pattern-detection abilities make it much simpler for us to identify them. An easy identification of outliers is also possible with EDA*
+
+b. Why do we visualize data? Explain using Anscombe’s quartet as a case study.
+
+  *identify patterns, trends and outliers in large data sets.*
+  *identify the correlations between the relationship of x-y variables*
+  *find trends over time*
+  *understanding about reach and reports of company sales, targets, achievement scores and so on*
+
+
+  *Anscombe's quartet consists of four datasets with virtually similar simple statistical properties that, when graphed, appear vastly different. Hence we will be able to see such anomaly only when we graphed. Thus we do data visualization to notice trends and clusters and any unusual patterns or outliers*
+
+### Question 3
+
+a. Write a  function called `fahr_to_celsius` that converts temperatures from
+Fahrenheit to Celsius. Print out the results when the temperature is $32^oF$.
+
+
+```{r }
+fahr_to_celsius<- function(n) {
+ (n-32)*5/9
+  #(9/5) * n + 32; 
+}
+fahr_to_celsius(32)
+```
+
+*32 fahr is 0 celc*
+
+b. Write another function called `celsius_to_kelvin` that converts Celsius into Kelvin. Print out the results
+when the temperature is $0^oC$.
+
+```{r }
+celsius_to_kelvin<- function(n) {
+ n+273.15
+  #(9/5) * n + 32; 
+}
+celsius_to_kelvin(0)
+```
+
+*0 celc is 273.15 kel*
+
+c. Compose the two functions in Parts 3a. and 3b. into a new function called `fahr_to_kelvin`
+that converts Fahrenheit to Kelvin. Print out the results when the temperature is
+$32^oF$.
+
+```{r }
+fahr_to_kelvin<- function(n) {
+  celsius_to_kelvin(fahr_to_celsius(n))
+  
+  #celcius = fahr_to_celsius(n)
+  #kelvin = celsius_to_kelvin(celcius)
+  #kelvin
+}
+fahr_to_kelvin(32)
+```
+*32 fahr is 273.156 kel*
+
+** For Questions 4,5, and 6, use the `nycflights13` package **
+
+### Question 4
+
+What are the ten most common destinations for flights from NYC airports in 2013? Make a table that lists these in descending order of frequency and shows the number of flight heading to each airport.
+
+```{r}
+
+flightsdata <- flights 
+
+table(flightsdata['dest'])%>%
+  as.data.frame() %>% 
+  arrange(desc(Freq)) %>%
+  slice(1:10)
+```
+*ORD,ATL,LAX, BOS,MCO are the top 10 most common destinations for flights from NYC airports in 2013. frequency and shows the number of flight heading to each airport is shown in the above table*
+
+
+### Question 5
+
+Which airlines have the most flights departing from NYC airports in 2013? Make a table that lists these in descending order of frequency and shows the number of flights for each airline. In your narrative mention the names of the airlines as well. Hint: You can use the `airlines` dataset to look up the airline name based on carrier code.
+
+
+```{r}
+top_airlines <- table(flightsdata['carrier'])%>%
+  as.data.frame() %>% 
+  arrange(desc(Freq))
+top_airlines
+```
+
+```{r}
+airlinesdata <- airlines
+
+#using full join to get the airline names based on carrier code by use of `airlines` dataset 
+df= top_airlines %>% full_join(airlinesdata,by="carrier")
+df
+
+```
+
+*"United Air Lines Inc."       "JetBlue Airways"             "ExpressJet Airlines Inc."    "Delta Air Lines Inc."  (in descending order) are the top 4 most common airlines(others in table above) for flights from NYC airports in 2013*
+
+
+### Question 6
+
+Consider only flights departing from New York on 1 January that year. 
+
+
+a. Are there missing data? 
+
+```{r}
+on_jan_1 <- flightsdata%>%
+  filter(flightsdata$year == 2013 & flightsdata$month == 1 & flightsdata$day ==1 )
+sum(is.na(on_jan_1))
+
+```
+
+*The dataset has 35 missing data*
+
+b. Are there any differences between the different carriers? Focusing on delays and the amount of time spent in the air.
+
+```{r warning = FALSE, fig.asp = 0.25, out.width = "50%"}
+flightsdata %>%
+  filter(!is.na(air_time)) %>%
+  ggplot(aes(x = air_time)) +
+  geom_boxplot() +
+  labs(title = " Distributions of airtime all airlines",
+       x = "Airtime distribution")
+```
+*The outliers seem to be airtime > 350* 
+
+
+```{r warning = FALSE}
+ggplot(flightsdata, aes(x = air_time, y = carrier)) +
+  geom_boxplot()+
+  labs(title = " Distributions of airtime each airlines",
+       x = "Airtime distribution")
+```
+
+*There are certainly many differences in the distribution of airtimes in various airlines as depicted in the boxplot above. reason may be that they have different flight journey schedules.*
+
+
+```{r warning = FALSE, fig.asp = 0.25, out.width = "50%"}
+flightsdata %>%
+  filter(!is.na(arr_delay)) %>%
+  ggplot(aes(x = arr_delay)) +
+  geom_boxplot() +
+  labs(title = " Distributions of arrival delay all airlines",
+       x = "arrival delay distribution")
+```
+
+```{r warning = FALSE}
+ggplot(flightsdata, aes(x = arr_delay, y = carrier)) +
+  geom_boxplot()+
+  labs(title = " Distributions of arrival delay each airlines",
+       x = "arrival delay distribution")
+```
+*Here's the distribution of arr delay in various airlines as depicted in the boxplot above. Arrival delay is common in arlines and can happen due to bad weather, airport traffic and among all these flights the delay seem to be similarly distributed across all airlines*
+
+
+c. Are there any outliers? Focusing on delays and the amount of time spent in the air.
+
+*From last figure in b, we saw the outliers seem to be airtime > 350. HA airline entire flight time is an outlier in this observaton*
+*There are outliers in arrival time dealy also as shown in the box plot above*
+
+
+
+### Question 7
+
+Load the `oslo-biomarkers.xlsx data`. Then do the following using dplyr/tidyr:
+
+```{r}
+oslo_data <- read_excel("oslo-biomarkers.xlsx")
+oslo_data
+```
+
+a. Split the `PatientID.timepoint` column in two parts: one with the patient ID and one with the timepoint.
+
+```{r}
+splitted_oslo_data <- oslo_data %>%
+  separate(PatientID.timepoint, c('PatientID', 'TimePoint'))
+
+splitted_oslo_data
+```
+*`PatientID.timepoint` column Splitted in two parts in table above*
+
+b. Sort the table by patient ID, in numeric order.
+
+```{r}
+  typeof(splitted_oslo_data$PatientID)
+
+```
+*The data type of Patient id is char so we would need to convert it to int to do numeric sorting*
+
+
+```{r}
+
+ splitted_oslo_data$PatientID <- as.integer(splitted_oslo_data$PatientID) 
+ typeof(splitted_oslo_data$PatientID)
+
+```
+
+
+```{r}
+splitted_oslo_data %>%
+  arrange(PatientID) 
+
+```
+
+*The above table has sorted data by patient ID, in numeric order*
+
+
+
+c. Reformat the data from long to wide, keeping only the `IL-8` and `VEGF-A` measurements.
+
+```{r}
+wide_oslo_data <- splitted_oslo_data %>%
+  pivot_wider(
+    id_cols = PatientID,
+    names_from = TimePoint,
+    values_from = c("IL-8", "VEGF-A")
+  )
+
+wide_oslo_data
+```
+
+*Here we can see that the long form has gone to wide form in terms of IL-8 and VEGA-A column attribute values*
+
+d. Merge the wide data frame from part c. with the `oslo-covariates.xlsx` data, using patient ID as key.
+
+```{r}
+
+oslo_covar_data <- read_excel("oslo-covariates.xlsx")
+
+merged_data <- wide_oslo_data %>%
+  left_join(oslo_covar_data,
+            by = "PatientID")
+
+merged_data
+```
+
+*Performed left join to see attributes of both tables in one table*
+
+e. Use the `oslo-covariates.xlsx` data to select data for smokers from the wide data frame in part c.
+
+```{r}
+
+#renaming 4th column for easiness
+colnames(oslo_covar_data)[4] <- "smoking"
+oslo_covar_data$smoking <- as.integer(oslo_covar_data$smoking) 
+ 
+only_smoker_data <- filter(oslo_covar_data, smoking ==2)
+only_smoker_data
+```
+
+```{r}
+
+merged_data %>% semi_join(only_smoker_data,
+                          by = "PatientID")
+```
+*Semi join either returns each row from input A, or it does not. No row duplication can occur. Regular join duplicates rows if there are multiple matches on the join predicate*
+
+Referred sites
+
+1) https://poldrack.github.io/psych-open-science-guide/4_reproducibleanalysis.html
+2) DATA 101: Intro to Data Science classs pptx Osei 
+3) https://www.geeksforgeeks.org/what-is-exploratory-data-analysis/
+4)https://sqlperformance.com/2018/02/sql-plan/row-goals-part-2-semi-joins
